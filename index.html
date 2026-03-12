@@ -3,13 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <title>文字表示テスト</title>
+
 <style>
+
+@font-face{
+  font-family:"myfont";
+  src:url("fonts/myfont.ttf");
+}
+
 body{
   display:flex;
   justify-content:center;
   align-items:center;
   height:100vh;
-  font-family:sans-serif;
 }
 
 #box{
@@ -19,9 +25,11 @@ body{
 
 #output{
   margin-top:20px;
-  font-size:40px;
+  font-size:60px;
+  font-family:"myfont";
   text-align:center;
 }
+
 </style>
 </head>
 <body>
@@ -36,10 +44,12 @@ body{
 </div>
 
 <script>
+
 function showText(){
   const t = document.getElementById("text").value;
   document.getElementById("output").textContent = t;
 }
+
 </script>
 
 </body>
