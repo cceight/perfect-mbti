@@ -14,13 +14,9 @@
 body{
   display:flex;
   flex-direction:column;
-  justify-content:center;
   align-items:center;
+  justify-content:center;
   height:100vh;
-}
-
-#box{
-  margin-bottom:20px;
 }
 
 #stage{
@@ -39,27 +35,18 @@ body{
   transform:translateX(-50%);
   font-size:60px;
   font-family:"calligraphr";
-  color:black;
-  text-align:center;
   white-space:nowrap;
-  pointer-events:none;
 }
 
 </style>
 </head>
+
 <body>
 
-<div id="box">
-
-<input type="text" id="text" maxlength="8">
-
+<input id="text" maxlength="8">
 <button onclick="showText()">表示</button>
-
 <button onclick="downloadWood()">wood.png出力</button>
-
 <button onclick="downloadGold()">gold.png出力</button>
-
-</div>
 
 <div id="stage">
 <img id="bg" src="images/wood.png">
@@ -71,131 +58,132 @@ body{
 <script>
 
 function showText(){
-
-  console.log("showText called");
-
-  const t = document.getElementById("text").value.trim();
-  document.getElementById("textLayer").textContent = t;
-
+  const t=document.getElementById("text").value;
+  document.getElementById("textLayer").textContent=t;
 }
 
-function getTextPosition(){
+function getPos(){
 
-  const textLayer = document.getElementById("textLayer");
-  const bg = document.getElementById("bg");
+  const textLayer=document.getElementById("textLayer");
+  const bg=document.getElementById("bg");
 
-  const rect = textLayer.getBoundingClientRect();
-  const bgRect = bg.getBoundingClientRect();
+  const r=textLayer.getBoundingClientRect();
+  const b=bg.getBoundingClientRect();
 
-  const x = rect.left - bgRect.left + rect.width/2;
-  let y = rect.top - bgRect.top;
-
-  return {x,y};
+  return{
+    x:r.left-b.left+r.width/2,
+    y:r.top-b.top
+  };
 
 }
 
 async function downloadWood(){
 
-  const textLayer = document.getElementById("textLayer");
-  const text = textLayer.textContent;
+  const text=document.getElementById("textLayer").textContent;
+  if(!text){alert("文字を入力してください");return;}
 
-  if(!text){
-    alert("文字を入力してください");
-    return;
-  }
-
-  const img = new Image();
-  img.src = "images/wood.png";
-
+  const img=new Image();
+  img.src="images/wood.png";
   await img.decode();
 
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
+  const canvas=document.createElement("canvas");
+  canvas.width=img.naturalWidth;
+  canvas.height=img.naturalHeight;
 
-  canvas.width = img.naturalWidth;
-  canvas.height = img.naturalHeight;
+  const ctx=canvas.getContext("2d");
 
   ctx.drawImage(img,0,0);
 
-  const pos = getTextPosition();
+  const pos=getPos();
 
-  ctx.font = "60px calligraphr";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "alphabetic";
-  ctx.fillStyle = "black";
+  ctx.font="60px calligraphr";
+  ctx.textAlign="center";
+  ctx.textBaseline="top";
+  ctx.fillStyle="black";
 
-  const metrics = ctx.measureText(text);
+  ctx.fillText(text,pos.x,pos.y);
 
-  let y = pos.y;
-
-  if(metrics.actualBoundingBoxAscent){
-      y += metrics.actualBoundingBoxAscent;
-  }
-
-  ctx.fillText(text,pos.x,y);
-
-  const link = document.createElement("a");
-  link.download = "wood_result.png";
-  link.href = canvas.toDataURL("image/png");
-  link.click();
+  const a=document.createElement("a");
+  a.href=canvas.toDataURL("image/png");
+  a.download="wood_result.png";
+  a.click();
 
 }
 
 async function downloadGold(){
 
-  const textLayer = document.getElementById("textLayer");
-  const text = textLayer.textContent;
+  const text=document.getElementById("textLayer").textContent;
+  if(!text){alert("文字を入力してください");return;}
 
-  if(!text){
-    alert("文字を入力してください");
-    return;
+  const res=await fetch("images/gold.png");
+  const buf=await res.arrayBuffer();
+
+  const img=UPNG.decode(buf);
+  const frames=UPNG.toRGBA8(img);
+
+  const w=img.width;
+  const h=img.height;
+
+  const pos=getPos();
+
+  /* 文字レイヤー生成（1回のみ） */
+
+  const textCanvas=document.createElement("canvas");
+  textCanvas.width=w;
+  textCanvas.height=h;
+
+  const tctx=textCanvas.getContext("2d");
+
+  tctx.font="60px calligraphr";
+  tctx.textAlign="center";
+  tctx.textBaseline="top";
+  tctx.fillStyle="black";
+
+  tctx.fillText(text,pos.x,pos.y);
+
+  const textPixels=tctx.getImageData(0,0,w,h).data;
+
+  const newFrames=new Array(frames.length);
+
+  for(let i=0;i<frames.length;i++){
+
+    const base=new Uint8Array(frames[i]);
+    const out=new Uint8Array(base);
+
+    for(let p=0;p<textPixels.length;p+=4){
+
+      const a=textPixels[p+3];
+
+      if(a>0){
+        out[p]=textPixels[p];
+        out[p+1]=textPixels[p+1];
+        out[p+2]=textPixels[p+2];
+        out[p+3]=255;
+      }
+
+    }
+
+    newFrames[i]=out.buffer;
+
   }
 
-  const response = await fetch("images/gold.png");
-  const buffer = await response.arrayBuffer();
+  const delays=img.frames.map(f=>f.delay);
 
-  const apng = UPNG.decode(buffer);
-  const frames = UPNG.toRGBA8(apng);
-
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-
-  canvas.width = apng.width;
-  canvas.height = apng.height;
-
-  const pos = getTextPosition();
-
-  const newFrames = [];
-
-for(let i=0;i<frames.length;i++){
-
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-
-  const imgData = new ImageData(
-    new Uint8ClampedArray(frames[i]),
-    apng.width,
-    apng.height
+  const encoded=UPNG.encode(
+    newFrames,
+    w,
+    h,
+    0,
+    delays
   );
 
-  ctx.putImageData(imgData,0,0);
+  const blob=new Blob([encoded],{type:"image/png"});
+  const url=URL.createObjectURL(blob);
 
-  ctx.font = "60px calligraphr";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "alphabetic";
-  ctx.fillStyle = "black";
-
-  const metrics = ctx.measureText(text);
-
-  let y = pos.y;
-
-  if(metrics.actualBoundingBoxAscent){
-      y += metrics.actualBoundingBoxAscent;
-  }
-
-  ctx.fillText(text,pos.x,y);
-
-  const frame = ctx.getImageData(0,0,canvas.width,canvas.height);
-  newFrames.push(new Uint8Array(frame.data));
+  const a=document.createElement("a");
+  a.href=url;
+  a.download="gold_result.apng";
+  a.click();
 
 }
 
@@ -203,5 +191,3 @@ for(let i=0;i<frames.length;i++){
 
 </body>
 </html>
-
-
