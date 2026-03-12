@@ -3,9 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>文字画像生成</title>
-
 <style>
-
 @font-face{
   font-family:"calligraphr";
   src:url("fonts/Calligraphr-Regular.otf") format("opentype");
@@ -37,12 +35,10 @@ body{
   font-family:"calligraphr";
   white-space:nowrap;
 }
-
 </style>
 </head>
 
 <body>
-
 <input id="text" maxlength="8">
 <button onclick="showText()">表示</button>
 <button onclick="downloadWood()">wood.png出力</button>
@@ -54,144 +50,97 @@ body{
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/upng-js@2.1.0/UPNG.js"></script>
-
 <script>
+/* ----- グローバル関数化 ----- */
+window.showText = function() {
+  const t = document.getElementById("text").value;
+  document.getElementById("textLayer").textContent = t;
+};
 
-function showText(){
-  const t=document.getElementById("text").value;
-  document.getElementById("textLayer").textContent=t;
-}
+window.downloadWood = async function() {
+  const text = document.getElementById("textLayer").textContent;
+  if(!text){ alert("文字を入力してください"); return; }
 
-function getPos(){
-
-  const textLayer=document.getElementById("textLayer");
-  const bg=document.getElementById("bg");
-
-  const r=textLayer.getBoundingClientRect();
-  const b=bg.getBoundingClientRect();
-
-  return{
-    x:r.left-b.left+r.width/2,
-    y:r.top-b.top
-  };
-
-}
-
-async function downloadWood(){
-
-  const text=document.getElementById("textLayer").textContent;
-  if(!text){alert("文字を入力してください");return;}
-
-  const img=new Image();
-  img.src="images/wood.png";
+  const img = new Image();
+  img.src = "images/wood.png";
   await img.decode();
 
-  const canvas=document.createElement("canvas");
-  canvas.width=img.naturalWidth;
-  canvas.height=img.naturalHeight;
+  const canvas = document.createElement("canvas");
+  canvas.width = img.naturalWidth;
+  canvas.height = img.naturalHeight;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(img, 0, 0);
 
-  const ctx=canvas.getContext("2d");
+  const pos = { x: canvas.width/2, y: 298 }; // 必要に応じ調整
+  ctx.font = "60px calligraphr";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+  ctx.fillStyle = "black";
+  ctx.fillText(text, pos.x, pos.y);
 
-  ctx.drawImage(img,0,0);
-
-  const pos=getPos();
-
-  ctx.font="60px calligraphr";
-  ctx.textAlign="center";
-  ctx.textBaseline="top";
-  ctx.fillStyle="black";
-
-  ctx.fillText(text,pos.x,pos.y);
-
-  const a=document.createElement("a");
-  a.href=canvas.toDataURL("image/png");
-  a.download="wood_result.png";
+  const a = document.createElement("a");
+  a.href = canvas.toDataURL("image/png");
+  a.download = "wood_result.png";
   a.click();
+};
 
-}
+window.downloadGold = async function() {
+  const text = document.getElementById("textLayer").textContent;
+  if(!text){ alert("文字を入力してください"); return; }
 
-async function downloadGold(){
-
-  const text=document.getElementById("textLayer").textContent;
-  if(!text){alert("文字を入力してください");return;}
-
-  const res = await fetch("images/gold.png");
-  if(!res.ok){ alert("gold.png が見つかりません"); return; }
+  const res = await fetch("images/gold.png"); // APNG
+  if(!res.ok){ alert("gold.png が取得できません"); return; }
   const buf = await res.arrayBuffer();
   if(buf.byteLength === 0){ alert("gold.png の読み込みに失敗"); return; }
+
   const img = UPNG.decode(buf);
+  const frames = UPNG.toRGBA8(img);
+  const w = img.width;
+  const h = img.height;
 
-  const img=UPNG.decode(buf);
-  const frames=UPNG.toRGBA8(img);
+  const pos = { x: w/2, y: 298 }; // 必要に応じ調整
 
-  const w=img.width;
-  const h=img.height;
+  // 文字レイヤーを1回だけ生成
+  const textCanvas = document.createElement("canvas");
+  textCanvas.width = w;
+  textCanvas.height = h;
+  const tctx = textCanvas.getContext("2d");
+  tctx.font = "60px calligraphr";
+  tctx.textAlign = "center";
+  tctx.textBaseline = "top";
+  tctx.fillStyle = "black";
+  tctx.fillText(text, pos.x, pos.y);
+  const textPixels = tctx.getImageData(0,0,w,h).data;
 
-  const pos=getPos();
-
-  /* 文字レイヤー生成（1回のみ） */
-
-  const textCanvas=document.createElement("canvas");
-  textCanvas.width=w;
-  textCanvas.height=h;
-
-  const tctx=textCanvas.getContext("2d");
-
-  tctx.font="60px calligraphr";
-  tctx.textAlign="center";
-  tctx.textBaseline="top";
-  tctx.fillStyle="black";
-
-  tctx.fillText(text,pos.x,pos.y);
-
-  const textPixels=tctx.getImageData(0,0,w,h).data;
-
-  const newFrames=new Array(frames.length);
+  const newFrames = new Array(frames.length);
 
   for(let i=0;i<frames.length;i++){
-
-    const base=new Uint8Array(frames[i]);
-    const out=new Uint8Array(base);
+    const base = new Uint8Array(frames[i]);
+    const out = new Uint8Array(base);
 
     for(let p=0;p<textPixels.length;p+=4){
-
-      const a=textPixels[p+3];
-
+      const a = textPixels[p+3];
       if(a>0){
-        out[p]=textPixels[p];
-        out[p+1]=textPixels[p+1];
-        out[p+2]=textPixels[p+2];
-        out[p+3]=255;
+        out[p]   = textPixels[p];
+        out[p+1] = textPixels[p+1];
+        out[p+2] = textPixels[p+2];
+        out[p+3] = 255;
       }
-
     }
 
-    newFrames[i]=out;
-
+    newFrames[i] = out; // Uint8Arrayで保持
   }
 
-  const delays=img.frames.map(f=>f.delay);
+  const delays = img.frames.map(f=>f.delay);
+  const encoded = UPNG.encode(newFrames, w, h, 0, delays);
+  const blob = new Blob([encoded],{type:"image/png"});
+  const url = URL.createObjectURL(blob);
 
-  const encoded=UPNG.encode(
-    newFrames,
-    w,
-    h,
-    0,
-    delays
-  );
-
-  const blob=new Blob([encoded],{type:"image/png"});
-  const url=URL.createObjectURL(blob);
-
-  const a=document.createElement("a");
-  a.href=url;
-  a.download="gold_result.apng";
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "gold_result.apng";
   a.click();
-
-}
-
+};
 </script>
-
 </body>
 </html>
-
