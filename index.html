@@ -52,6 +52,7 @@ body{
 <div id="box">
 <input type="text" id="text">
 <button onclick="showText()">出力</button>
+<button onclick="downloadImage()">ダウンロード</button>
 </div>
 
 <div id="stage">
@@ -66,10 +67,37 @@ function showText(){
   document.getElementById("textLayer").textContent = t;
 }
 
+function downloadImage(){
+
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+
+  const bg = document.getElementById("bg");
+  const text = document.getElementById("textLayer").textContent;
+
+  canvas.width = bg.width;
+  canvas.height = bg.height;
+
+  ctx.drawImage(bg,0,0);
+
+  ctx.font = "48px calligraphr";
+  ctx.textAlign = "center";
+  ctx.fillStyle = "black";
+
+  ctx.fillText(text, canvas.width/2, 220);
+
+  const link = document.createElement("a");
+  link.download = "result.png";
+  link.href = canvas.toDataURL("image/png");
+  link.click();
+
+}
+
 </script>
 
 </body>
 </html>
+
 
 
 
