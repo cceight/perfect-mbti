@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>シンプルページ</title>
+<title>文字表示テスト</title>
 <style>
 body{
   display:flex;
@@ -11,18 +11,36 @@ body{
   height:100vh;
   font-family:sans-serif;
 }
+
 #box{
   display:flex;
   gap:10px;
+}
+
+#output{
+  margin-top:20px;
+  font-size:40px;
+  text-align:center;
 }
 </style>
 </head>
 <body>
 
-<div id="box">
-  <input type="text">
-  <button>出力</button>
+<div>
+  <div id="box">
+    <input type="text" id="text">
+    <button onclick="showText()">出力</button>
+  </div>
+
+  <div id="output"></div>
 </div>
+
+<script>
+function showText(){
+  const t = document.getElementById("text").value;
+  document.getElementById("output").textContent = t;
+}
+</script>
 
 </body>
 </html>
