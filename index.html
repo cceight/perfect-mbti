@@ -165,53 +165,35 @@ async function downloadGold(){
 
   const newFrames = [];
 
-  for(let i=0;i<frames.length;i++){
+for(let i=0;i<frames.length;i++){
 
-    const imgData = new ImageData(
-      new Uint8ClampedArray(frames[i]),
-      apng.width,
-      apng.height
-    );
+  ctx.clearRect(0,0,canvas.width,canvas.height);
 
-    ctx.putImageData(imgData,0,0);
-
-    ctx.font = "60px calligraphr";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "alphabetic";
-    ctx.fillStyle = "black";
-
-    const metrics = ctx.measureText(text);
-
-    let y = pos.y;
-
-    if(metrics.actualBoundingBoxAscent){
-        y += metrics.actualBoundingBoxAscent;
-    }
-
-    ctx.fillText(text,pos.x,y);
-
-    const frame = ctx.getImageData(0,0,canvas.width,canvas.height);
-    newFrames.push(frame.data.buffer);
-
-  }
-
-  const delays = apng.frames.map(f => f.delay);
-
-  const encoded = UPNG.encode(
-    newFrames,
-    canvas.width,
-    canvas.height,
-    0,
-    delays
+  const imgData = new ImageData(
+    new Uint8ClampedArray(frames[i]),
+    apng.width,
+    apng.height
   );
 
-  const blob = new Blob([encoded],{type:"image/png"});
-  const url = URL.createObjectURL(blob);
+  ctx.putImageData(imgData,0,0);
 
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "gold_result.apng";
-  link.click();
+  ctx.font = "60px calligraphr";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "alphabetic";
+  ctx.fillStyle = "black";
+
+  const metrics = ctx.measureText(text);
+
+  let y = pos.y;
+
+  if(metrics.actualBoundingBoxAscent){
+      y += metrics.actualBoundingBoxAscent;
+  }
+
+  ctx.fillText(text,pos.x,y);
+
+  const frame = ctx.getImageData(0,0,canvas.width,canvas.height);
+  newFrames.push(new Uint8Array(frame.data));
 
 }
 
@@ -219,3 +201,4 @@ async function downloadGold(){
 
 </body>
 </html>
+
