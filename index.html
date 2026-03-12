@@ -102,12 +102,18 @@ function downloadImage(){
   const bgRect = bg.getBoundingClientRect();
 
   const x = rect.left - bgRect.left + rect.width/2;
-  const y = rect.top - bgRect.top;
+  let y = rect.top - bgRect.top;
 
   ctx.font = "60px calligraphr";
   ctx.textAlign = "center";
-  ctx.textBaseline = "top";
+  ctx.textBaseline = "alphabetic";
   ctx.fillStyle = "black";
+
+  const metrics = ctx.measureText(text);
+
+  if(metrics.actualBoundingBoxAscent){
+      y += metrics.actualBoundingBoxAscent;
+  }
 
   ctx.fillText(text, x, y);
 
@@ -115,11 +121,11 @@ function downloadImage(){
   link.download = "result.png";
   link.href = canvas.toDataURL("image/png");
   link.click();
-
 }
 
 </script>
 
 </body>
 </html>
+
 
