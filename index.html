@@ -1,1 +1,38 @@
-<p>test</p>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>シンプルページ</title>
+<style>
+body{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+  font-family:sans-serif;
+}
+#box{
+  display:flex;
+  gap:10px;
+}
+</style>
+</head>
+<body>
+
+<div>
+  <div id="box">
+    <input type="text" id="text">
+    <button onclick="out()">出力</button>
+  </div>
+  <p id="result"></p>
+</div>
+
+<script>
+function out(){
+  document.getElementById("result").textContent =
+  document.getElementById("text").value;
+}
+</script>
+
+</body>
+</html>
